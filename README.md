@@ -1,8 +1,8 @@
 # IE221.N21.CNCL!
-![Alt text](screenshot/game_menu_screenshot.png)
 
 # Airplane Shooting Game
 Welcome to our Airplane Shooting Game, built using Pygame in the course “Kỹ thuật lập trình Python” for class IE221.N21.CNCL.
+![Alt text](screenshot/game_menu_screenshot.png)
 
 # Introduction
 In this game, you will control an airplane and shoot down enemy planes in the sky. With beautiful graphics and exciting gameplay, this game promises to bring you fun and entertaining moments.
@@ -19,7 +19,7 @@ Download or clone this repository to your computer.
 Navigate to the game’s directory and run python main.py to start the game.
 
 # How to Play
-Use the mouse to move your airplane and press the right click button to shoot. Avoid enemy bullets and shoot down as many enemy planes as possible to earn points. The game ends when your airplane is hit by an enemy bullet.
+Use the mouse to move your airplane and press the left click button to shoot. Avoid enemy bullets and shoot down as many enemy planes as possible to earn points. The game ends when your airplane is hit by an enemy bullet.
 
 # Credits
 This game was developed by Phạm Văn Thái in the course “Kỹ thuật lập trình Python” for class IE221.N21.CNCL.
