@@ -1,4 +1,6 @@
-# IE221.N21.CNCL
+# IE221.N21.CNCL!
+[image](https://github.com/Melios025/IE221.N21.CNCL/assets/84947414/8bf8feb7-2e02-4777-ad9d-6e8bebc0ed97)
+
 # Airplane Shooting Game
 Welcome to our Airplane Shooting Game, built using Pygame in the course “Kỹ thuật lập trình Python” for class IE221.N21.CNCL.
 
