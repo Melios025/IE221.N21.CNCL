@@ -22,11 +22,31 @@ class Game():
         # Boss
         self.boss_sprite = Boss()
         self.boss = pygame.sprite.GroupSingle(self.boss_sprite)
+        
+        #Time
+        self.time = 0
 
         # Text
         self.text = pygame.sprite.Group()
 
-        # Get mouse position
+        self.background_surface = pygame.image.load(
+            'graphics/bg.jpg').convert_alpha()
+        self.background_rect = self.background_surface.get_rect(
+            center=(640, 360))
+        
+        #Background for game start
+        self.background_surface_start = pygame.image.load(
+            'graphics/bg_start.jpg').convert_alpha()
+        self.background_surface_start = pygame.transform.rotozoom(self.background_surface_start,0,0.3)
+        self.background_rect_start = self.background_surface.get_rect(
+            center=(640, 360))
+        
+        #Background for game over
+        self.background_surface_over = pygame.image.load(
+            'graphics/bg_over.jpg').convert_alpha()
+        self.background_surface_over = pygame.transform.rotozoom(self.background_surface_over,0,0.3)
+        self.background_rect_over = self.background_surface_over.get_rect(
+            center=(640, 360))
 
     def check_collide(self):
         global GAME_OVER, GAME_ACTIVE, SCORE
@@ -84,20 +104,19 @@ class Game():
         else:
             health_display = False
         self.text.add(Text(
-            40, f'Health: {self.boss_sprite.health}', 'White', (60, 50), health_display))
+            40,f'Health: {self.boss_sprite.health}', 'White', (55, 50), health_display))
 
     def game_win_condition(self):
-        global GAME_ACTIVE
+        global GAME_ACTIVE, GAME_WIN
         if self.boss_sprite.health <= 0:
             GAME_ACTIVE = False
+            GAME_WIN = True
 
     def game_active(self):
-        self.background_surface = pygame.image.load(
-            'graphics/bg.jpg').convert_alpha()
-        self.background_rect = self.background_surface.get_rect(
-            center=(640, 360))
+       
         # Draw background
         screen.blit(self.background_surface, self.background_rect)
+        
 
         # Draw player
         self.player_sprite.bullets.draw(screen)
@@ -125,6 +144,13 @@ class Game():
         if SCORE >= BOSS_SPAWN_SCORE:
             self.check_collide_boss()
 
+        #Draw tips
+        current_time = pygame.time.get_ticks()
+        if current_time - self.time < 3000:
+            tips_display = True
+            self.text.add(Text(30, f'Tips: Try to reach {BOSS_SPAWN_SCORE} point to meet the boss level', 'White',(640, 50), tips_display))
+        else: tips_display = False
+       
         # Display score
         self.display_score()
         if SCORE >= BOSS_SPAWN_SCORE:
@@ -138,62 +164,62 @@ class Game():
             return
 
     def game_main_menu(self):
-        self.background_surface = pygame.image.load(
-            'graphics/bg.jpg').convert_alpha()
-        self.background_rect = self.background_surface.get_rect(
-            center=(640, 360))
-        screen.blit(self.background_surface, self.background_rect)
+        #Draw background
+        screen.blit(self.background_surface_start, self.background_rect_start)
 
         self.mouse_pos = pygame.mouse.get_pos()
         if GAME_START:
             menu_text_display = True
         else:
             menu_text_display = False
-        self.text.add(Text(100, 'My Final Project', 'Black',
-                      (640, 100), menu_text_display))
+        self.text.add(Text(100, 'My Final Project', 'White',
+                      (640, 130), menu_text_display))
         self.text.draw(screen)
         self.text.update()
 
         # Play button
-        self.play_button = Button(None, (640, 300), 'PLAY', pygame.font.Font(
-            'font/Pixeltype.ttf', 80), 'Black', 'lightblue')
+        self.play_button = Button(None, (640, 330), 'PLAY', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'White', 'red')
         self.play_button.changeColor(self.mouse_pos)
         self.play_button.update(screen)
 
         # Setting button
-        self.setting_button = Button(None, (640, 370), 'SETTING', pygame.font.Font(
-            'font/Pixeltype.ttf', 80), 'Black', 'red')
+        self.setting_button = Button(None, (640, 400), 'SETTING', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'White', 'red')
         self.setting_button.changeColor(self.mouse_pos)
         self.setting_button.update(screen)
 
         # Quit button
-        self.quit_button = Button(None, (640, 440), 'QUIT', pygame.font.Font(
-            'font/Pixeltype.ttf', 80), 'Black', 'red')
+        self.quit_button = Button(None, (640, 470), 'QUIT', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'White', 'red')
         self.quit_button.changeColor(self.mouse_pos)
         self.quit_button.update(screen)
         if not GAME_START:
             return
 
     def game_over_menu(self):
+        screen.blit(self.background_surface_over,self.background_rect_over)
         self.mouse_pos = pygame.mouse.get_pos()
         if GAME_OVER:
             text_display = True
         else:
             text_display = False
         self.text.add(
-            Text(60, f'Your score: {SCORE}', 'black', (640, 100), text_display))
+            Text(100,'GAME OVER', 'white', (640, 100), text_display))
+        self.text.add(
+            Text(80, f'Your score: {SCORE}', 'white', (640, 170), text_display))
         self.text.draw(screen)
         self.text.update()
 
         # Restart button
-        self.restart_button = Button(None, (640, 300), 'RESTART', pygame.font.Font(
-            'font/Pixeltype.ttf', 80), 'Black', 'red')
+        self.restart_button = Button(None, (640, 330), 'RESTART', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
         self.restart_button.changeColor(self.mouse_pos)
         self.restart_button.update(screen)
 
         # Main menu button
-        self.main_menu_button = Button(None, (640, 370), 'MAIN MENU', pygame.font.Font(
-            'font/Pixeltype.ttf', 80), 'Black', 'red')
+        self.main_menu_button = Button(None, (640, 400), 'MAIN MENU', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
         self.main_menu_button.changeColor(self.mouse_pos)
         self.main_menu_button.update(screen)
 
@@ -204,9 +230,24 @@ class Game():
         if not GAME_OVER:
             return
 
+    def game_win_menu(self):
+        if GAME_WIN:
+            text_display = True
+        else:
+            text_display = False
+            
+        self.text.add(
+            Text(100,'GAME WIN !!!', 'white', (640, 340), text_display))
+        self.text.add(
+            Text(80, f'Your score: {SCORE}', 'white', (640, 400), text_display))
+        self.text.draw(screen)
+        self.text.update()
+        if not GAME_WIN: return
+    
     def game_restart(self, back_main):
         global SCORE
         SCORE = 0
+        game.time = pygame.time.get_ticks()
         self.enemies.empty()
         self.boss_sprite.bullets.empty()
         self.boss_sprite.rect.x = 640
@@ -254,17 +295,20 @@ if __name__ == '__main__':
                     if game.quit_button.checkForInput(game.mouse_pos):
                         pygame.quit()
                         sys.exit()
-        print(CLOCK.get_fps())
+        # print(CLOCK.get_fps())
         if GAME_START:
             screen.fill('white')
             game.game_main_menu()
         elif GAME_ACTIVE:
+            if game.time == 0:
+                game.time = pygame.time.get_ticks()
             game.game_active()
         elif GAME_OVER:
             pygame.mouse.set_visible(True)
             screen.fill('white')
             game.game_over_menu()
-        else:
-            screen.fill('white')
+        elif GAME_WIN:
+            screen.fill('black')
+            game.game_win_menu()
         pygame.display.flip()
         CLOCK.tick(60)

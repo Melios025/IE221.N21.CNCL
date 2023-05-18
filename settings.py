@@ -7,9 +7,13 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 GAME_START = True
 GAME_ACTIVE = False
 GAME_OVER = False
-BOSS_HEALTH = 3
+GAME_WIN = False
+BOSS_HEALTH = 5
 PLAYER_COOLDOWN = 300
 ENEMY_COOLDOWN = 700
 BOSS_COOLDOWN = 300
 SCORE = 0
-BOSS_SPAWN_SCORE = 3
+BOSS_SPAWN_SCORE = 10
+
+# f = open('/setting.txt', 'a')
+# print(f.read())
