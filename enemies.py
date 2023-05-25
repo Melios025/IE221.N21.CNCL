@@ -28,13 +28,6 @@ class Enemies(pygame.sprite.Sprite):
             self.image = enemy_yellow
         self.rect = self.image.get_rect(center=(x_pos, y_pos))
 
-    def update(self):
-        self.destroy()
-        self.enemy_shoot()
-        self.bullets.update()
-        self.delay_shoot()
-        self.rect.y += 2
-
     def enemy_shoot(self):
         if self.ready:
             if self.type == 'blue':
@@ -56,6 +49,13 @@ class Enemies(pygame.sprite.Sprite):
     def destroy(self):
         if self.rect.y >= SCREEN_HEIGHT:
             self.kill()
+
+    def update(self):
+        self.destroy()
+        self.enemy_shoot()
+        self.bullets.update()
+        self.delay_shoot()
+        self.rect.y += 2
 
 
 class Boss(pygame.sprite.Sprite):
