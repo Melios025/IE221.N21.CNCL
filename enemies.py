@@ -3,6 +3,43 @@ from settings import *
 from random import randint
 from bullet import Bullet
 
+class Meteor(pygame.sprite.Sprite):
+    def __init__(self,type):
+        super().__init__()
+        if type == 1:
+            meteor_1 = pygame.image.load('graphics/meteor_1.png').convert_alpha()
+            meteor_1 = pygame.transform.rotozoom(meteor_1,0,0.3)
+            self.image = meteor_1
+        if type == 2:
+            meteor_2 = pygame.image.load('graphics/meteor_2.png').convert_alpha()
+            meteor_2 = pygame.transform.rotozoom(meteor_2,0,0.3)
+            self.image = meteor_2
+        if type == 3:
+            meteor_3 = pygame.image.load('graphics/meteor_3.png').convert_alpha()
+            meteor_3 = pygame.transform.rotozoom(meteor_3,0,0.3)
+            self.image = meteor_3
+        if type == 4:
+            meteor_4 = pygame.image.load('graphics/meteor_4.png').convert_alpha()
+            meteor_4 = pygame.transform.rotozoom(meteor_4,0,0.3)
+            self.image = meteor_4
+        x_pos = randint(50, 1230)
+        y_pos = randint(-50, 0)
+        self.move_x_pos = 0
+        self.move_y_pos = 0
+        while self.move_x_pos == 0:
+            self.move_x_pos = randint(-4,4)
+        while self.move_y_pos == 0:
+            self.move_y_pos = randint(2,4)
+        self.rect = self.image.get_rect(center = (x_pos,y_pos))
+        
+    def destroy(self):
+        if self.rect.y >= SCREEN_HEIGHT:
+            self.kill()
+
+    def update(self):
+        self.destroy()
+        self.rect.x +=self.move_x_pos
+        self.rect.y +=self.move_y_pos
 
 class Enemies(pygame.sprite.Sprite):
     def __init__(self, type):
@@ -28,6 +65,8 @@ class Enemies(pygame.sprite.Sprite):
             self.image = enemy_yellow
         self.rect = self.image.get_rect(center=(x_pos, y_pos))
 
+    def set_cooldown(self,cooldown):
+        self.cooldown = cooldown
     def enemy_shoot(self):
         if self.ready:
             if self.type == 'blue':
@@ -89,6 +128,10 @@ class Boss(pygame.sprite.Sprite):
         elif self.rect.right >= 1280 and self.rect.top >= 0:
             self.speed = -5
 
+    def set_boss_cooldown_health(self,cooldown,health):
+        self.cooldown = cooldown
+        self.health = health
+    
     def update(self):
         if self.rect.y >= 0:
             self.rect.x += self.speed

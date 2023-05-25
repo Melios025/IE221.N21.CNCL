@@ -1,23 +1,25 @@
 import pygame
 import sys
 from enemies import Enemies
+from enemies import Meteor
 from player import Player
 from enemies import Boss
 from random import choice
 from text import Text
 from button import Button
-
 from settings import *
+
 
 class Game():
     def __init__(self):
-        
+
         # Player
         self.player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(self.player_sprite)
 
         # Enemy
         self.enemies = pygame.sprite.Group()
+        self.meteors = pygame.sprite.Group()
 
         # Boss
         self.boss_sprite = Boss()
@@ -62,6 +64,28 @@ class Game():
         self.setting_music = Button(None, (640, 400), 'Music', pygame.font.Font(
             'font/Pixeltype.ttf', 60), 'red', 'red')
 
+    def change_difficulty(self, difficulty):
+        global ENEMY_SPAWN, ENEMY_COOLDOWN, BOSS_COOLDOWN, BOSS_HEALTH, BOSS_SPAWN_SCORE
+        if difficulty == 'easy':
+            ENEMY_SPAWN = 1000
+            ENEMY_COOLDOWN = 700
+            BOSS_COOLDOWN = 300
+            BOSS_HEALTH = 5
+            BOSS_SPAWN_SCORE = 10
+        if difficulty == 'medium':
+            ENEMY_SPAWN = 750
+            ENEMY_COOLDOWN = 500
+            BOSS_COOLDOWN = 250
+            BOSS_HEALTH = 10
+            BOSS_SPAWN_SCORE = 15
+        if difficulty == 'hard':
+            ENEMY_SPAWN = 500
+            ENEMY_COOLDOWN = 300
+            BOSS_COOLDOWN = 200
+            BOSS_HEALTH = 20
+            BOSS_SPAWN_SCORE = 20
+        self.boss_sprite.set_boss_cooldown_health(BOSS_COOLDOWN, BOSS_HEALTH)
+
     def check_collide(self):
         global GAME_OVER, GAME_ACTIVE, SCORE
         # Colide from bullet to enemy
@@ -70,9 +94,15 @@ class Game():
                 if pygame.sprite.spritecollide(bullet, self.enemies, True):
                     bullet.kill()
                     SCORE += 1
+                if pygame.sprite.spritecollide(bullet, self.meteors, True):
+                    bullet.kill()
+                    SCORE += 1
 
         # Colide from player to enemy
         if pygame.sprite.spritecollide(self.player_sprite, self.enemies, False):
+            GAME_ACTIVE = False
+            GAME_OVER = True
+        if pygame.sprite.spritecollide(self.player_sprite, self.meteors, False):
             GAME_ACTIVE = False
             GAME_OVER = True
 
@@ -110,7 +140,9 @@ class Game():
         else:
             score_display = False
         self.text.add(
-            Text(40, f'Score: {SCORE}', 'White', (60, 20), score_display))
+            Text(40, f'Player: {PLAYER_NAME}', 'White', (90, 20), score_display))
+        self.text.add(
+            Text(40, f'Score: {SCORE}', 'White', (60, 50), score_display))
 
     def display_health(self):
         if GAME_ACTIVE:
@@ -118,13 +150,36 @@ class Game():
         else:
             health_display = False
         self.text.add(Text(
-            40, f'Health: {self.boss_sprite.health}', 'White', (55, 50), health_display))
+            40, f'Health: {self.boss_sprite.health}', 'White', (60, 70), health_display))
 
     def game_win_condition(self):
-        global GAME_ACTIVE, GAME_WIN
+        global GAME_ACTIVE, GAME_WIN, SCORE
         if self.boss_sprite.health <= 0:
+            SCORE += 10
             GAME_ACTIVE = False
             GAME_WIN = True
+
+    def save_game(self):
+        with open('save.txt') as save_file:
+            json_decoded = json.load(save_file)
+        json_decoded[PLAYER_NAME] = SCORE
+        with open('save.txt', 'w') as save_file:
+            json.dump(json_decoded, save_file)
+
+    def game_restart(self, back_main):
+        global SCORE
+        SCORE = 0
+        self.change_difficulty(DIFFICULTY)
+        game.time = pygame.time.get_ticks()
+        self.meteors.empty()
+        self.enemies.empty()
+        self.boss_sprite.bullets.empty()
+        self.boss_sprite.rect.x = 640
+        self.boss_sprite.rect.y = -100
+
+        self.player_sprite.bullets.empty()
+        if not back_main:
+            pygame.mouse.set_pos(640, 650)
 
     def game_active(self):
         # Draw background
@@ -141,10 +196,13 @@ class Game():
         self.enemies.draw(screen)
         self.enemies.update()
 
+        self.meteors.draw(screen)
+        self.meteors.update()
+
         # Draw boss
         if SCORE >= BOSS_SPAWN_SCORE:
             self.boss.draw(screen)
-            self.enemies.empty()
+            # self.enemies.empty()
             self.boss.update()
             if self.boss_sprite.rect.top <= 0:
                 self.boss_sprite.rect.y += 5
@@ -177,16 +235,19 @@ class Game():
             return
 
     def game_main_menu(self):
+
         # Draw background
         screen.blit(self.background_surface_start, self.background_rect_start)
-
         self.mouse_pos = pygame.mouse.get_pos()
         if GAME_START:
             menu_text_display = True
         else:
             menu_text_display = False
+
         self.text.add(Text(100, 'My Final Project', 'White',
                       (640, 130), menu_text_display))
+        self.text.add(Text(60, f'Player name: {PLAYER_NAME}', 'White',
+                      (640, 200), menu_text_display))
         self.text.draw(screen)
         self.text.update()
 
@@ -196,14 +257,20 @@ class Game():
         self.play_button.changeColor(self.mouse_pos)
         self.play_button.update(screen)
 
+        # Score board button
+        self.score_board_button = Button(None, (640, 380), 'SCORE BOARD', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'White', 'red')
+        self.score_board_button.changeColor(self.mouse_pos)
+        self.score_board_button.update(screen)
+
         # Setting button
-        self.setting_button = Button(None, (640, 400), 'SETTING', pygame.font.Font(
+        self.setting_button = Button(None, (640, 430), 'SETTING', pygame.font.Font(
             'font/Pixeltype.ttf', 60), 'White', 'red')
         self.setting_button.changeColor(self.mouse_pos)
         self.setting_button.update(screen)
 
         # Quit button
-        self.quit_button = Button(None, (640, 470), 'QUIT', pygame.font.Font(
+        self.quit_button = Button(None, (640, 480), 'QUIT', pygame.font.Font(
             'font/Pixeltype.ttf', 60), 'White', 'red')
         self.quit_button.changeColor(self.mouse_pos)
         self.quit_button.update(screen)
@@ -244,6 +311,8 @@ class Game():
             return
 
     def game_win_menu(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        screen.fill('black')
         if GAME_WIN:
             text_display = True
         else:
@@ -255,21 +324,12 @@ class Game():
             Text(80, f'Your score: {SCORE}', 'white', (640, 400), text_display))
         self.text.draw(screen)
         self.text.update()
+        self.main_menu_button = Button(None, (640, 500), 'MAIN MENU', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
+        self.main_menu_button.changeColor(self.mouse_pos)
+        self.main_menu_button.update(screen)
         if not GAME_WIN:
             return
-
-    def game_restart(self, back_main):
-        global SCORE
-        SCORE = 0
-        game.time = pygame.time.get_ticks()
-        self.enemies.empty()
-        self.boss_sprite.bullets.empty()
-        self.boss_sprite.rect.x = 640
-        self.boss_sprite.rect.y = -100
-
-        self.player_sprite.bullets.empty()
-        if not back_main:
-            pygame.mouse.set_pos(640, 650)
 
     def game_option_menu(self):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -279,7 +339,7 @@ class Game():
             text_display = False
         # Difficulty option
         self.text.add(
-            Text(50, 'Game DIFFICULTY: ', 'black', (500, 250), text_display))
+            Text(50, 'Game difficulty: ', 'black', (500, 250), text_display))
         if DIFFICULTY == 'easy':
             self.setting_easy = Button(None, (500, 300), 'Easy', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
@@ -330,107 +390,228 @@ class Game():
         self.text.draw(screen)
         self.text.update()
 
+    def score_board(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        if SCORE_BOARD:
+            text_display = True
+        else:
+            text_display = False
+        with open('save.txt') as save_file:
+            data = json.load(save_file)
+        data_sort = dict(
+            sorted(data.items(), key=lambda x: x[1], reverse=True))
+        self.text.add(Text(100, 'SCORE BOARD', 'black',
+                      (640, 130), text_display))
+        score_board_y = 200
+        for key, value in data_sort.items():
+            self.text.add(Text(50, f'{key}: {value}', 'black',
+                               (640, score_board_y), text_display))
+            score_board_y += 40
+        self.close_button = Button(None, (1230, 50), 'X', pygame.font.Font(
+            'font/Pixeltype.ttf', 100), 'black', 'red')
+
+        self.close_button.update(screen)
+        self.text.draw(screen)
+        self.text.update()
+
 
 if __name__ == '__main__':
     pygame.init()
     timer = pygame.USEREVENT + 1
-    pygame.time.set_timer(timer, ENEMY_SPAWN)
+    data = {PLAYER_NAME: SCORE}
     game = Game()
+    pygame.time.set_timer(timer, ENEMY_SPAWN)
+    pygame.mixer.music.load('audio/bg_music.mp3')
+    pygame.mixer.music.set_volume(0.2)
+    if MUSIC == True:
+        pygame.mixer.music.play(0, 30)
+    game_menu_sound = pygame.mixer.Sound('audio/game_ui.mp3')
+    game_over_sound = pygame.mixer.Sound('audio/game_over.mp3')
+    game_win_sound = pygame.mixer.Sound('audio/game_win.mp3')
+    game_start_sound = pygame.mixer.Sound('audio/game_start.mp3')
     while True:
+        if SOUND == False:
+            if game_menu_sound != None:
+                pygame.mixer.Sound.set_volume(game_menu_sound, 0)
+            if game_over_sound != None:
+                pygame.mixer.Sound.set_volume(game_over_sound, 0)
+            if game_win_sound != None:
+                pygame.mixer.Sound.set_volume(game_win_sound, 0)
+            if game_start_sound != None:
+                pygame.mixer.Sound.set_volume(game_start_sound, 0)
+        else:
+            if game_menu_sound != None:
+                pygame.mixer.Sound.set_volume(game_menu_sound, 1)
+            if game_over_sound != None:
+                pygame.mixer.Sound.set_volume(game_over_sound, 1)
+            if game_win_sound != None:
+                pygame.mixer.Sound.set_volume(game_win_sound, 1)
+            if game_start_sound != None:
+                pygame.mixer.Sound.set_volume(game_start_sound, 1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                game.save_game()
                 pygame.quit()
                 sys.exit()
             if GAME_START:
                 if event.type == pygame.MOUSEBUTTONUP:
                     if game.play_button.checkForInput(game.mouse_pos):
                         pygame.mouse.set_pos(640, 600)
+                        game_start_sound.play()
+                        game_over_sound = pygame.mixer.Sound(
+                            'audio/game_over.mp3')
+                        game_win_sound = pygame.mixer.Sound(
+                            'audio/game_win.mp3')
                         GAME_START = False
                         GAME_ACTIVE = True
+                    if game.score_board_button.checkForInput(game.mouse_pos):
+                        game_start_sound.play()
+                        game_over_sound = pygame.mixer.Sound(
+                            'audio/game_over.mp3')
+                        game_win_sound = pygame.mixer.Sound(
+                            'audio/game_win.mp3')
+                        GAME_START = False
+                        SCORE_BOARD = True
                     if game.setting_button.checkForInput(game.mouse_pos):
+                        game_menu_sound.play()
                         GAME_START = False
                         GAME_OPTION = True
                     if game.quit_button.checkForInput(game.mouse_pos):
+                        game.save_game()
                         pygame.quit()
                         sys.exit()
-            if GAME_OPTION:
-                 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        PLAYER_NAME = PLAYER_NAME[:-1]
+                    else:
+                        PLAYER_NAME += event.unicode
+            if SCORE_BOARD:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if game.close_button.checkForInput(game.mouse_pos):
+                        game_menu_sound.play()
+                        SCORE_BOARD = False
+                        GAME_START = True
+            if GAME_OPTION:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if game.close_button.checkForInput(game.mouse_pos):
+                        game_menu_sound.play()
                         GAME_OPTION = False
                         GAME_START = True
                     if game.setting_easy.checkForInput(game.mouse_pos) and DIFFICULTY != 'easy':
                         DIFFICULTY = 'easy'
-                        ENEMY_SPAWN = 1000
-                        ENEMY_COOLDOWN = 700
-                        BOSS_COOLDOWN = 300
-                        BOSS_HEALTH = 5
-                        BOSS_SPAWN_SCORE = 10
+                        game_menu_sound.play()
+                        game.change_difficulty('easy')
+                        pygame.time.set_timer(timer, ENEMY_SPAWN)
 
                     if game.setting_medium.checkForInput(game.mouse_pos) and DIFFICULTY != 'medium':
                         DIFFICULTY = 'medium'
-                        ENEMY_SPAWN = 750
-                        ENEMY_COOLDOWN = 500
-                        BOSS_COOLDOWN = 250
-                        BOSS_HEALTH = 10
-                        BOSS_SPAWN_SCORE = 15
+                        game_menu_sound.play()
+                        game.change_difficulty('medium')
+                        pygame.time.set_timer(timer, ENEMY_SPAWN)
 
                     if game.setting_hard.checkForInput(game.mouse_pos) and DIFFICULTY != 'hard':
                         DIFFICULTY = 'hard'
-                        ENEMY_SPAWN = 500
-                        ENEMY_COOLDOWN = 1
-                        BOSS_COOLDOWN = 200
-                        BOSS_HEALTH = 20
-                        BOSS_SPAWN_SCORE = 20
-                        game.enemies.update()
+                        game_menu_sound.play()
+                        game.change_difficulty('hard')
+                        pygame.time.set_timer(timer, ENEMY_SPAWN)
 
                     if game.setting_sound.checkForInput(game.mouse_pos) and SOUND != True:
+                        game_menu_sound.play()
                         SOUND = True
+                        pygame.mixer.Sound.set_volume(
+                            game.player_sprite.shoot_sound, 1)
                     elif game.setting_sound.checkForInput(game.mouse_pos) and SOUND != False:
                         SOUND = False
+                        pygame.mixer.Sound.set_volume(
+                            game.player_sprite.shoot_sound, 0)
 
                     if game.setting_music.checkForInput(game.mouse_pos) and MUSIC != True:
+                        game_menu_sound.play()
                         MUSIC = True
+                        pygame.mixer.music.play()
                     elif game.setting_music.checkForInput(game.mouse_pos) and MUSIC != False:
+                        game_menu_sound.play()
                         MUSIC = False
-                    
+                        pygame.mixer.music.stop()
             if GAME_ACTIVE:
                 if event.type == timer:
                     if SCORE < BOSS_SPAWN_SCORE:
                         game.enemies.add(
                             Enemies(choice(['blue', 'yellow', 'blue'])))
+                    else:
+                        game.meteors.add(
+                            Meteor(choice([1, 2, 3, 4])))
             if GAME_OVER:
                 if event.type == pygame.MOUSEBUTTONUP:
                     if game.restart_button.checkForInput(game.mouse_pos):
+                        game_start_sound.play()
+                        if MUSIC == True:
+                            pygame.mixer.music.play(0)
+                        game_over_sound = pygame.mixer.Sound(
+                            'audio/game_over.mp3')
+                        game_win_sound = pygame.mixer.Sound(
+                            'audio/game_win.mp3')
+                        game.save_game()
                         game.game_restart(False)
                         GAME_OVER = False
                         GAME_ACTIVE = True
                     if game.main_menu_button.checkForInput(game.mouse_pos):
+                        if MUSIC == True:
+                            pygame.mixer.music.play(0)
+                        game_menu_sound.play()
+                        game.save_game()
                         game.game_restart(True)
                         GAME_OVER = False
                         GAME_START = True
                     if game.quit_button.checkForInput(game.mouse_pos):
+                        game.save_game()
                         pygame.quit()
                         sys.exit()
-        # print(CLOCK.get_fps())
+            if GAME_WIN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if game.main_menu_button.checkForInput(game.mouse_pos):
+                        if MUSIC == True:
+                            pygame.mixer.music.play(0)
+                        game_over_sound = pygame.mixer.Sound(
+                            'audio/game_over.mp3')
+                        game_win_sound = pygame.mixer.Sound(
+                            'audio/game_win.mp3')
+                        game_menu_sound.play()
+                        game.save_game()
+                        game.game_restart(True)
+                        GAME_WIN = False
+                        GAME_START = True
+        # Game layout for each game state
         if GAME_START:
             screen.fill('white')
             game.game_main_menu()
         elif GAME_ACTIVE:
-            print(DIFFICULTY, game.enemies)
+            print(CLOCK.get_fps())
+            for enemy in game.enemies:
+                enemy.set_cooldown(ENEMY_COOLDOWN)
             if game.time == 0:
                 game.time = pygame.time.get_ticks()
             game.game_active()
+        elif SCORE_BOARD:
+            screen.fill('white')
+            game.score_board()
         elif GAME_OPTION:
-            print(DIFFICULTY, game.enemies)
             screen.fill('white')
             game.game_option_menu()
         elif GAME_OVER:
+            pygame.mixer.music.stop()
+            if game_over_sound != None:
+                game_over_sound.play()
+                game_over_sound = None
             pygame.mouse.set_visible(True)
             screen.fill('white')
             game.game_over_menu()
         elif GAME_WIN:
-            screen.fill('black')
             game.game_win_menu()
+            pygame.mixer.music.stop()
+            if game_win_sound != None:
+                game_win_sound.play()
+                game_win_sound = None
+            pygame.mouse.set_visible(True)
         pygame.display.flip()
         CLOCK.tick(60)

@@ -15,6 +15,8 @@ class Player(pygame.sprite.Sprite):
         self.ready = True
         self.bullet_time = 0
         self.cooldown = PLAYER_COOLDOWN
+        self.shoot_sound = pygame.mixer.Sound('audio/shot.mp3')
+        self.shoot_sound.set_volume(0.5)
 
     def player_input(self):
         mouse = pygame.mouse.get_pos()
@@ -35,6 +37,8 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self):
         self.bullets.add(Bullet(self.rect.midtop,0))
+        if SOUND ==True:
+            self.shoot_sound.play()
 
     def update(self):
         self.player_input()

@@ -7,7 +7,7 @@ class Text(pygame.sprite.Sprite):
         self.display = display
         text_font = pygame.font.Font('font/Pixeltype.ttf', size)
         self.image = text_font.render(f'{text}',False,color)
-        self.rect = self.image.get_rect(center = (pos))
+        self.rect = self.image.get_rect(center=pos)
     
     def destroy(self):
         if not self.display:
