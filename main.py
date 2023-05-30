@@ -1,5 +1,6 @@
 import pygame
 import sys
+import json
 from enemies import Enemies
 from enemies import Meteor
 from player import Player
@@ -11,7 +12,45 @@ from settings import *
 
 
 class Game():
+    """Game class to init the game
+    
+    Methods:
+        change_difficulty(difficulty): Change difficulty of the game to match the setting.
+        
+        check_collide(): Check collision from sprites to others.
+        
+        check_collide_boss(): Check collision from boss's sprites to player's sprites.
+        
+        display_score(): Display the score on screen of gameplay
+        
+        display_health(): Display the health of boss on screen of gameplay
+        
+        game_win_condition(): Check if the game match the win condition and change game state
+        
+        save_game(): Save the player's score to save file.
+        
+        game_restart(back_main): Do things when press restart or back_to_main button.
+        
+        game_active(): Main gameplay state
+        
+        game_main_menu(): Main menu state        
+        
+        game_over_menu(): Game over menu state
+        
+        game_win_menu(): Game win menu state
+        
+        game_option_menu(): Game option menu state
+        
+        score_board(): Game score board state
+    """
+    
     def __init__(self):
+        """Initialize all sprites that should be used by the game
+        
+        Load background, sounds, etc
+        Create buttons
+        Set time from beginning of the game to 0
+        """
 
         # Player
         self.player_sprite = Player()
@@ -65,6 +104,14 @@ class Game():
             'font/Pixeltype.ttf', 60), 'red', 'red')
 
     def change_difficulty(self, difficulty):
+        """Change difficulty of the game to match the setting.
+        
+        Set global variable (ENEMY_SPAWN, ENEMY_COOLDOWN, etc) to match the difficulty. 
+        Set boss atribute of cooldown and health to match the global variables.
+
+        Args:
+            difficulty (string): has 3 values( easy, medium, hard ) 
+        """
         global ENEMY_SPAWN, ENEMY_COOLDOWN, BOSS_COOLDOWN, BOSS_HEALTH, BOSS_SPAWN_SCORE
         if difficulty == 'easy':
             ENEMY_SPAWN = 1000
@@ -87,8 +134,14 @@ class Game():
         self.boss_sprite.set_boss_cooldown_health(BOSS_COOLDOWN, BOSS_HEALTH)
 
     def check_collide(self):
+        """Check collision from sprites to others
+        
+        Check collision and change game state variables if necessary
+        Check collision and add score if necessary
+        Kill sprite if necessary
+        """
         global GAME_OVER, GAME_ACTIVE, SCORE
-        # Colide from bullet to enemy
+        # Collide from bullet to enemy
         if self.player_sprite.bullets:
             for bullet in self.player_sprite.bullets:
                 if pygame.sprite.spritecollide(bullet, self.enemies, True):
@@ -98,7 +151,7 @@ class Game():
                     bullet.kill()
                     SCORE += 1
 
-        # Colide from player to enemy
+        # Collide from player to enemy
         if pygame.sprite.spritecollide(self.player_sprite, self.enemies, False):
             GAME_ACTIVE = False
             GAME_OVER = True
@@ -116,6 +169,11 @@ class Game():
                         GAME_OVER = True
 
     def check_collide_boss(self):
+        """Check collision from boss's sprites to player's sprites
+        
+        Check collosion and change game state if necessary
+        Kill sprite if necessary
+        """
         global GAME_ACTIVE, GAME_OVER
         if self.player_sprite.bullets:
             for bullet in self.player_sprite.bullets:
@@ -135,6 +193,7 @@ class Game():
                     GAME_OVER = True
 
     def display_score(self):
+        """Display the score on screen of gameplay."""
         if GAME_ACTIVE:
             score_display = True
         else:
@@ -145,6 +204,7 @@ class Game():
             Text(40, f'Score: {SCORE}', 'White', (60, 50), score_display))
 
     def display_health(self):
+        """Display the health of boss on screen of gameplay."""
         if GAME_ACTIVE:
             health_display = True
         else:
@@ -153,6 +213,7 @@ class Game():
             40, f'Health: {self.boss_sprite.health}', 'White', (60, 70), health_display))
 
     def game_win_condition(self):
+        """Check if the game match the win condition and change game state."""
         global GAME_ACTIVE, GAME_WIN, SCORE
         if self.boss_sprite.health <= 0:
             SCORE += 10
@@ -160,82 +221,18 @@ class Game():
             GAME_WIN = True
 
     def save_game(self):
+        """Save the player's score to save file."""
         with open('save.txt') as save_file:
             json_decoded = json.load(save_file)
         json_decoded[PLAYER_NAME] = SCORE
         with open('save.txt', 'w') as save_file:
             json.dump(json_decoded, save_file)
 
-    def game_restart(self, back_main):
-        global SCORE
-        SCORE = 0
-        self.change_difficulty(DIFFICULTY)
-        game.time = pygame.time.get_ticks()
-        self.meteors.empty()
-        self.enemies.empty()
-        self.boss_sprite.bullets.empty()
-        self.boss_sprite.rect.x = 640
-        self.boss_sprite.rect.y = -100
-
-        self.player_sprite.bullets.empty()
-        if not back_main:
-            pygame.mouse.set_pos(640, 650)
-
-    def game_active(self):
-        # Draw background
-        screen.blit(self.background_surface, self.background_rect)
-
-        # Draw player
-        self.player_sprite.bullets.draw(screen)
-        self.player.draw(screen)
-        self.player.update()
-
-        # Draw enemy
-        for enemy in self.enemies:
-            enemy.bullets.draw(screen)
-        self.enemies.draw(screen)
-        self.enemies.update()
-
-        self.meteors.draw(screen)
-        self.meteors.update()
-
-        # Draw boss
-        if SCORE >= BOSS_SPAWN_SCORE:
-            self.boss.draw(screen)
-            # self.enemies.empty()
-            self.boss.update()
-            if self.boss_sprite.rect.top <= 0:
-                self.boss_sprite.rect.y += 5
-            else:
-                self.boss_sprite.bullets.draw(screen)
-        # Check collide
-        self.check_collide()
-        if SCORE >= BOSS_SPAWN_SCORE:
-            self.check_collide_boss()
-
-        # Draw tips
-        current_time = pygame.time.get_ticks()
-        if current_time - self.time < 3000:
-            tips_display = True
-            self.text.add(Text(
-                30, f'Tips: Try to reach {BOSS_SPAWN_SCORE} point to meet the boss level', 'White', (640, 50), tips_display))
-        else:
-            tips_display = False
-
-        # Display score
-        self.display_score()
-        if SCORE >= BOSS_SPAWN_SCORE:
-            self.display_health()
-        self.text.draw(screen)
-        self.text.update()
-
-        # Game win
-        self.game_win_condition()
-        if not GAME_ACTIVE:
-            return
-
     def game_main_menu(self):
-
+        """Main menu state
+        
+        Draw background, button, text, etc.
+        """
         # Draw background
         screen.blit(self.background_surface_start, self.background_rect_start)
         self.mouse_pos = pygame.mouse.get_pos()
@@ -277,61 +274,42 @@ class Game():
         if not GAME_START:
             return
 
-    def game_over_menu(self):
-        screen.blit(self.background_surface_over, self.background_rect_over)
+    def score_board(self):
+        """Game score board state
+        
+        Load score board saved from the file
+        Draw background, text, button for game scoreboard menu
+        """
         self.mouse_pos = pygame.mouse.get_pos()
-        if GAME_OVER:
+        if SCORE_BOARD:
             text_display = True
         else:
             text_display = False
-        self.text.add(
-            Text(100, 'GAME OVER', 'white', (640, 100), text_display))
-        self.text.add(
-            Text(80, f'Your score: {SCORE}', 'white', (640, 170), text_display))
+        with open('save.txt') as save_file:
+            data = json.load(save_file)
+        data_sort = dict(
+            sorted(data.items(), key=lambda x: x[1], reverse=True))
+        self.text.add(Text(100, 'SCORE BOARD', 'black',
+                      (640, 130), text_display))
+        score_board_y = 200
+        for key, value in data_sort.items():
+            self.text.add(Text(50, f'{key}: {value}', 'black',
+                               (640, score_board_y), text_display))
+            score_board_y += 40
+        self.close_button = Button(None, (1230, 50), 'X', pygame.font.Font(
+            'font/Pixeltype.ttf', 100), 'black', 'red')
+
+        self.close_button.update(screen)
         self.text.draw(screen)
-        self.text.update()
-
-        # Restart button
-        self.restart_button = Button(None, (640, 330), 'RESTART', pygame.font.Font(
-            'font/Pixeltype.ttf', 60), 'white', 'red')
-        self.restart_button.changeColor(self.mouse_pos)
-        self.restart_button.update(screen)
-
-        # Main menu button
-        self.main_menu_button = Button(None, (640, 400), 'MAIN MENU', pygame.font.Font(
-            'font/Pixeltype.ttf', 60), 'white', 'red')
-        self.main_menu_button.changeColor(self.mouse_pos)
-        self.main_menu_button.update(screen)
-
-        # Quit button
-        self.quit_button.changeColor(self.mouse_pos)
-        self.quit_button.update(screen)
-
-        if not GAME_OVER:
-            return
-
-    def game_win_menu(self):
-        self.mouse_pos = pygame.mouse.get_pos()
-        screen.fill('black')
-        if GAME_WIN:
-            text_display = True
-        else:
-            text_display = False
-
-        self.text.add(
-            Text(100, 'GAME WIN !!!', 'white', (640, 340), text_display))
-        self.text.add(
-            Text(80, f'Your score: {SCORE}', 'white', (640, 400), text_display))
-        self.text.draw(screen)
-        self.text.update()
-        self.main_menu_button = Button(None, (640, 500), 'MAIN MENU', pygame.font.Font(
-            'font/Pixeltype.ttf', 60), 'white', 'red')
-        self.main_menu_button.changeColor(self.mouse_pos)
-        self.main_menu_button.update(screen)
-        if not GAME_WIN:
-            return
+        self.text.update()  
 
     def game_option_menu(self):
+        """Game option menu state
+        
+        Draw background, text, button for game option menu
+        Change difficulty
+        Turn on sound or music
+        """
         self.mouse_pos = pygame.mouse.get_pos()
         if GAME_OPTION:
             text_display = True
@@ -389,47 +367,170 @@ class Game():
         self.setting_music.update(screen)
         self.text.draw(screen)
         self.text.update()
+    
+    def game_active(self):
+        """Main gameplay state
+        
+        Draw background, player, enemy or boss and everything else
+        Check if game win or over(through check_collide function)
+        """
+        # Draw background
+        screen.blit(self.background_surface, self.background_rect)
 
-    def score_board(self):
-        self.mouse_pos = pygame.mouse.get_pos()
-        if SCORE_BOARD:
-            text_display = True
+        # Draw player
+        self.player_sprite.bullets.draw(screen)
+        self.player.draw(screen)
+        self.player.update()
+
+        # Draw enemy
+        for enemy in self.enemies:
+            enemy.bullets.draw(screen)
+        self.enemies.draw(screen)
+        self.enemies.update()
+
+        self.meteors.draw(screen)
+        self.meteors.update()
+
+        # Draw boss
+        if SCORE >= BOSS_SPAWN_SCORE:
+            self.boss.draw(screen)
+            # self.enemies.empty()
+            self.boss.update()
+            if self.boss_sprite.rect.top <= 0:
+                self.boss_sprite.rect.y += 5
+            else:
+                self.boss_sprite.bullets.draw(screen)
+        # Check collide
+        self.check_collide()
+        if SCORE >= BOSS_SPAWN_SCORE:
+            self.check_collide_boss()
+
+        # Draw tips
+        current_time = pygame.time.get_ticks()
+        if current_time - self.time < 3000:
+            tips_display = True
+            self.text.add(Text(
+                30, f'Tips: Try to reach {BOSS_SPAWN_SCORE} point to meet the boss level', 'White', (640, 50), tips_display))
         else:
-            text_display = False
-        with open('save.txt') as save_file:
-            data = json.load(save_file)
-        data_sort = dict(
-            sorted(data.items(), key=lambda x: x[1], reverse=True))
-        self.text.add(Text(100, 'SCORE BOARD', 'black',
-                      (640, 130), text_display))
-        score_board_y = 200
-        for key, value in data_sort.items():
-            self.text.add(Text(50, f'{key}: {value}', 'black',
-                               (640, score_board_y), text_display))
-            score_board_y += 40
-        self.close_button = Button(None, (1230, 50), 'X', pygame.font.Font(
-            'font/Pixeltype.ttf', 100), 'black', 'red')
+            tips_display = False
 
-        self.close_button.update(screen)
+        # Display score
+        self.display_score()
+        if SCORE >= BOSS_SPAWN_SCORE:
+            self.display_health()
         self.text.draw(screen)
         self.text.update()
 
+        # Game win
+        self.game_win_condition()
+        if not GAME_ACTIVE:
+            return
+    
+    def game_over_menu(self):
+        """Game over menu state
+        
+        Draw background,button, text for game over menu
+        """
+        screen.blit(self.background_surface_over, self.background_rect_over)
+        self.mouse_pos = pygame.mouse.get_pos()
+        if GAME_OVER:
+            text_display = True
+        else:
+            text_display = False
+        self.text.add(
+            Text(100, 'GAME OVER', 'white', (640, 100), text_display))
+        self.text.add(
+            Text(80, f'Your score: {SCORE}', 'white', (640, 170), text_display))
+        self.text.draw(screen)
+        self.text.update()
 
-if __name__ == '__main__':
+        # Restart button
+        self.restart_button = Button(None, (640, 330), 'RESTART', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
+        self.restart_button.changeColor(self.mouse_pos)
+        self.restart_button.update(screen)
+
+        # Main menu button
+        self.main_menu_button = Button(None, (640, 400), 'MAIN MENU', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
+        self.main_menu_button.changeColor(self.mouse_pos)
+        self.main_menu_button.update(screen)
+
+        # Quit button
+        self.quit_button.changeColor(self.mouse_pos)
+        self.quit_button.update(screen)
+
+        if not GAME_OVER:
+            return
+
+    def game_restart(self, back_main):
+        """Do things when press restart or back_to_main button.
+        
+        Set every thing to default according to game's difficulty.
+        If not back to main: set player's mouse (the spaceship) to bottom of screen.
+
+        Args:
+            back_main (bool): Check if player press restart(0) or back_to_main(1).
+        """
+        global SCORE
+        SCORE = 0
+        self.change_difficulty(DIFFICULTY)
+        game.time = pygame.time.get_ticks()
+        self.meteors.empty()
+        self.enemies.empty()
+        self.boss_sprite.bullets.empty()
+        self.boss_sprite.rect.x = 640
+        self.boss_sprite.rect.y = -100
+
+        self.player_sprite.bullets.empty()
+        if not back_main:
+            pygame.mouse.set_pos(640, 650)
+            
+    def game_win_menu(self):
+        """Game win menu state
+        
+        Draw background, text, button for game win menu
+        """
+        self.mouse_pos = pygame.mouse.get_pos()
+        screen.fill('black')
+        if GAME_WIN:
+            text_display = True
+        else:
+            text_display = False
+
+        self.text.add(
+            Text(100, 'GAME WIN !!!', 'white', (640, 340), text_display))
+        self.text.add(
+            Text(80, f'Your score: {SCORE}', 'white', (640, 400), text_display))
+        self.text.draw(screen)
+        self.text.update()
+        self.main_menu_button = Button(None, (640, 500), 'MAIN MENU', pygame.font.Font(
+            'font/Pixeltype.ttf', 60), 'white', 'red')
+        self.main_menu_button.changeColor(self.mouse_pos)
+        self.main_menu_button.update(screen)
+        if not GAME_WIN:
+            return
+
+
+# Main game loop
+if __name__ == '__main__': 
     pygame.init()
     timer = pygame.USEREVENT + 1
-    data = {PLAYER_NAME: SCORE}
     game = Game()
+    print(Player().__doc__)
     pygame.time.set_timer(timer, ENEMY_SPAWN)
+    
     pygame.mixer.music.load('audio/bg_music.mp3')
     pygame.mixer.music.set_volume(0.2)
     if MUSIC == True:
         pygame.mixer.music.play(0, 30)
+        
     game_menu_sound = pygame.mixer.Sound('audio/game_ui.mp3')
     game_over_sound = pygame.mixer.Sound('audio/game_over.mp3')
     game_win_sound = pygame.mixer.Sound('audio/game_win.mp3')
     game_start_sound = pygame.mixer.Sound('audio/game_start.mp3')
     while True:
+        """Main game loop."""
         if SOUND == False:
             if game_menu_sound != None:
                 pygame.mixer.Sound.set_volume(game_menu_sound, 0)
@@ -568,7 +669,7 @@ if __name__ == '__main__':
                         pygame.quit()
                         sys.exit()
             if GAME_WIN:
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONUP:
                     if game.main_menu_button.checkForInput(game.mouse_pos):
                         if MUSIC == True:
                             pygame.mixer.music.play(0)
@@ -586,7 +687,6 @@ if __name__ == '__main__':
             screen.fill('white')
             game.game_main_menu()
         elif GAME_ACTIVE:
-            print(CLOCK.get_fps())
             for enemy in game.enemies:
                 enemy.set_cooldown(ENEMY_COOLDOWN)
             if game.time == 0:

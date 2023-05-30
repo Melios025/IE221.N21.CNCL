@@ -1,11 +1,10 @@
 import pygame
-import json
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 CLOCK = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-PLAYER_NAME = 'Guest'
+PLAYER_NAME = ''
 GAME_START = True  # suppose to be True in game start
 GAME_ACTIVE = False  # suppose to be False in game start
 GAME_OPTION = False  # suppose to be False in game start

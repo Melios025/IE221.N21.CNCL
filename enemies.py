@@ -4,7 +4,25 @@ from random import randint
 from bullet import Bullet
 
 class Meteor(pygame.sprite.Sprite):
+    """Class for Meteors.
+    
+    Methods:
+        destroy(): kill The enemy if it out of screen.
+        
+        update(): Update over a loop.
+    """ 
     def __init__(self,type):
+        """Initialize the meteors.
+
+        Args:
+            type (1 or 2 or 3 or 4): Change appearance of meteors according to type.
+        Attrs:
+            rect (pygame rectangle): The rectangle of a meteor.
+            
+            move_x_pos, move_y_pos (int): Random coordinate to move.
+            
+            image (file image): The appearance of the meteors.
+        """
         super().__init__()
         if type == 1:
             meteor_1 = pygame.image.load('graphics/meteor_1.png').convert_alpha()
@@ -33,16 +51,49 @@ class Meteor(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center = (x_pos,y_pos))
         
     def destroy(self):
+        """Kill the meteor if it out of screen."""
         if self.rect.y >= SCREEN_HEIGHT:
             self.kill()
 
     def update(self):
+        """Update over a loop."""
         self.destroy()
         self.rect.x +=self.move_x_pos
         self.rect.y +=self.move_y_pos
 
 class Enemies(pygame.sprite.Sprite):
+    """Class for enemies
+    
+    Methods: 
+        set_cooldown(cooldown): Set the cooldown.
+        
+        enemy_shoot(): Enemy shoot when this function called.
+        
+        delay_shoot(): Make the enemy shoot slower.
+        
+        destroy(): Kill the enemy if it out of screen.
+        
+        update(self): Update over a loop.
+    """
     def __init__(self, type):
+        """Initialize a enemy
+
+        Args:
+            type (blue or yellow): Change appearance of a enemy according to type.
+            
+        Attribute:
+            image (file image): The image of the enemy.
+            
+            rect (pygame rectangle): The rectangle of a enemy.
+            
+            bullets (pygame group): A group of bullets.
+            
+            ready (boolean): Whether the enemy is ready to shoot.
+            
+            bullet_time (int): The time at which the enemy shooted.
+            
+            cooldown (int): The cooldown of a enemy.
+        """
         super().__init__()
         self.bullets = pygame.sprite.Group()
         self.ready = True
@@ -66,8 +117,14 @@ class Enemies(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x_pos, y_pos))
 
     def set_cooldown(self,cooldown):
+        """Set the cooldown.
+
+        Args:
+            cooldown (int): Value of the cooldown to be set.
+        """
         self.cooldown = cooldown
     def enemy_shoot(self):
+        """Enemy shoot when this function called."""
         if self.ready:
             if self.type == 'blue':
                 self.bullets.add(Bullet(self.rect.center, 180))
@@ -80,16 +137,19 @@ class Enemies(pygame.sprite.Sprite):
                 self.bullet_time = pygame.time.get_ticks()
 
     def delay_shoot(self):
+        """Make the enemy shoot slower."""
         if not self.ready:
             current_time = pygame.time.get_ticks()
             if current_time - self.bullet_time > self.cooldown:
                 self.ready = True
 
     def destroy(self):
+        """Kill the enemy if it out of screen."""
         if self.rect.y >= SCREEN_HEIGHT:
             self.kill()
 
     def update(self):
+        """Update over a loop."""
         self.destroy()
         self.enemy_shoot()
         self.bullets.update()
@@ -98,7 +158,39 @@ class Enemies(pygame.sprite.Sprite):
 
 
 class Boss(pygame.sprite.Sprite):
+    """Class of Boss.
+    
+    Methods:
+        boss_shoot(): When boss ready, shoot.
+        
+        delay_shoot(): Make boss shoot slower.
+        
+        boss_movement(self): Boss move.
+        
+        set_boss_cooldown_health (cooldown,health): Set boss's cooldown and health by arguments.
+        
+        update(): Update over a loop.
+    """
     def __init__(self):
+        """Initialize a Boss.
+        
+        Attributes:
+            image (file image): The image of the boss.
+            
+            rect (pygame rectangle): Rectangle of the boss.
+            
+            health (int): Boss's health.
+            
+            bullet (pygame group): Group of bullets.
+            
+            ready (bool): Boss ready to shoot or not.
+            
+            bullet_time (int): Set time when boss shoot.
+            
+            cooldown (int): Boss's cooldown.
+            
+            speed (int): Boss's speed.
+        """
         super().__init__()
         self.image = pygame.image.load('graphics/boss.png').convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 0, 1)
@@ -111,28 +203,38 @@ class Boss(pygame.sprite.Sprite):
         self.speed = 5
 
     def boss_shoot(self):
+        """When boss ready, shoot."""
         if self.ready:
             self.bullets.add(Bullet(self.rect.center, 180))
             self.ready = False
             self.bullet_time = pygame.time.get_ticks()
 
     def delay_shoot(self):
+        """Make boss shoot slower."""
         if not self.ready:
             current_time = pygame.time.get_ticks()
             if current_time - self.bullet_time > self.cooldown:
                 self.ready = True
 
     def boss_movement(self):
+        """Boss move."""
         if self.rect.left <= 0 and self.rect.top >= 0:
             self.speed = 5
         elif self.rect.right >= 1280 and self.rect.top >= 0:
             self.speed = -5
 
     def set_boss_cooldown_health(self,cooldown,health):
+        """Set boss's cooldown and health by arguments,
+
+        Args:
+            cooldown (int): Cooldown to be set.
+            health (int): Health to be set.
+        """
         self.cooldown = cooldown
         self.health = health
     
     def update(self):
+        """Update over a loop."""
         if self.rect.y >= 0:
             self.rect.x += self.speed
         self.boss_movement()
