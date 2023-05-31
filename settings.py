@@ -3,6 +3,9 @@ import pygame
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 CLOCK = pygame.time.Clock()
+icon = pygame.image.load('graphics/icon.ico') 
+pygame.display.set_icon(icon)
+pygame.display.set_caption('My Final Project')
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 PLAYER_NAME = ''
 GAME_START = True  # suppose to be True in game start

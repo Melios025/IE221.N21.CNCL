@@ -156,7 +156,6 @@ class Enemies(pygame.sprite.Sprite):
         self.delay_shoot()
         self.rect.y += 2
 
-
 class Boss(pygame.sprite.Sprite):
     """Class of Boss.
     

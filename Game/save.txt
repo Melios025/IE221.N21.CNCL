@@ -1,1 +1,1 @@
-{}
+{"Thai": 0, "Thai 2": 0, "Melios": 5, "Melios 2": 11, "Melios 3": 3}

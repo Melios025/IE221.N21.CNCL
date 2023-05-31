@@ -90,7 +90,15 @@ class Game():
             self.background_surface_over, 0, 0.3)
         self.background_rect_over = self.background_surface_over.get_rect(
             center=(640, 360))
+        
+        # Background for game win and game settings
+        self.background_surface_win_setting = pygame.image.load('graphics/bg_win_setting.png').convert_alpha()
+        self.background_rect_win_setting = self.background_surface_win_setting.get_rect(center=(640,360))
 
+        # Background for game score board
+        self.background_surface_scoreboard = pygame.image.load('graphics/bg_scoreboard.jpg').convert_alpha()
+        self.background_surface_scoreboard = pygame.transform.rotozoom(self.background_surface_scoreboard, 0, 1.3)
+        self.background_rect_scoreboard = self.background_surface_scoreboard.get_rect(center=(640,360))
         # Buttons
         self.setting_easy = Button(None, (500, 300), 'Easy', pygame.font.Font(
             'font/Pixeltype.ttf', 60), 'red', 'red')
@@ -199,7 +207,7 @@ class Game():
         else:
             score_display = False
         self.text.add(
-            Text(40, f'Player: {PLAYER_NAME}', 'White', (90, 20), score_display))
+            Text(40, f'Player: {PLAYER_NAME}', 'White', (88, 20), score_display))
         self.text.add(
             Text(40, f'Score: {SCORE}', 'White', (60, 50), score_display))
 
@@ -210,7 +218,7 @@ class Game():
         else:
             health_display = False
         self.text.add(Text(
-            40, f'Health: {self.boss_sprite.health}', 'White', (60, 70), health_display))
+            40, f'Health: {self.boss_sprite.health}', 'White', (60, 75), health_display))
 
     def game_win_condition(self):
         """Check if the game match the win condition and change game state."""
@@ -280,6 +288,7 @@ class Game():
         Load score board saved from the file
         Draw background, text, button for game scoreboard menu
         """
+        screen.blit(self.background_surface_scoreboard,self.background_rect_scoreboard)
         self.mouse_pos = pygame.mouse.get_pos()
         if SCORE_BOARD:
             text_display = True
@@ -289,15 +298,15 @@ class Game():
             data = json.load(save_file)
         data_sort = dict(
             sorted(data.items(), key=lambda x: x[1], reverse=True))
-        self.text.add(Text(100, 'SCORE BOARD', 'black',
+        self.text.add(Text(100, 'SCORE BOARD', 'white',
                       (640, 130), text_display))
         score_board_y = 200
         for key, value in data_sort.items():
-            self.text.add(Text(50, f'{key}: {value}', 'black',
+            self.text.add(Text(50, f'{key}: {value}', 'white',
                                (640, score_board_y), text_display))
             score_board_y += 40
         self.close_button = Button(None, (1230, 50), 'X', pygame.font.Font(
-            'font/Pixeltype.ttf', 100), 'black', 'red')
+            'font/Pixeltype.ttf', 100), 'white', 'red')
 
         self.close_button.update(screen)
         self.text.draw(screen)
@@ -310,6 +319,7 @@ class Game():
         Change difficulty
         Turn on sound or music
         """
+        screen.blit(self.background_surface_win_setting, self.background_rect_win_setting)
         self.mouse_pos = pygame.mouse.get_pos()
         if GAME_OPTION:
             text_display = True
@@ -317,47 +327,47 @@ class Game():
             text_display = False
         # Difficulty option
         self.text.add(
-            Text(50, 'Game difficulty: ', 'black', (500, 250), text_display))
+            Text(50, 'Game difficulty: ', 'white', (500, 250), text_display))
         if DIFFICULTY == 'easy':
             self.setting_easy = Button(None, (500, 300), 'Easy', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
         else:
             self.setting_easy = Button(None, (500, 300), 'Easy', pygame.font.Font(
-                'font/Pixeltype.ttf', 60), 'black', 'red')
+                'font/Pixeltype.ttf', 60), 'white', 'red')
 
         if DIFFICULTY == 'medium':
             self.setting_medium = Button(None, (640, 300), 'Medium', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
         else:
             self.setting_medium = Button(None, (640, 300), 'Medium', pygame.font.Font(
-                'font/Pixeltype.ttf', 60), 'black', 'red')
+                'font/Pixeltype.ttf', 60), 'white', 'red')
 
         if DIFFICULTY == 'hard':
             self.setting_hard = Button(None, (780, 300), 'Hard', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
         else:
             self.setting_hard = Button(None, (780, 300), 'Hard', pygame.font.Font(
-                'font/Pixeltype.ttf', 60), 'black', 'red')
+                'font/Pixeltype.ttf', 60), 'white', 'red')
 
         # Sound and music
 
         self.text.add(
-            Text(50, 'Sound and music: ', 'black', (500, 350), text_display))
+            Text(50, 'Sound and music: ', 'white', (500, 350), text_display))
         if SOUND == True:
             self.setting_sound = Button(None, (500, 400), 'Sound', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
         else:
             self.setting_sound = Button(None, (500, 400), 'Sound', pygame.font.Font(
-                'font/Pixeltype.ttf', 60), 'black', 'red')
+                'font/Pixeltype.ttf', 60), 'white', 'red')
         if MUSIC == True:
             self.setting_music = Button(None, (640, 400), 'Music', pygame.font.Font(
                 'font/Pixeltype.ttf', 60), 'red', 'red')
         else:
             self.setting_music = Button(None, (640, 400), 'Music', pygame.font.Font(
-                'font/Pixeltype.ttf', 60), 'black', 'red')
+                'font/Pixeltype.ttf', 60), 'white', 'red')
 
         self.close_button = Button(None, (1230, 50), 'X', pygame.font.Font(
-            'font/Pixeltype.ttf', 100), 'black', 'red')
+            'font/Pixeltype.ttf', 100), 'white', 'red')
 
         self.close_button.update(screen)
         self.setting_easy.update(screen)
@@ -491,20 +501,20 @@ class Game():
         
         Draw background, text, button for game win menu
         """
+        screen.blit(self.background_surface_win_setting, self.background_rect_win_setting)
         self.mouse_pos = pygame.mouse.get_pos()
-        screen.fill('black')
         if GAME_WIN:
             text_display = True
         else:
             text_display = False
 
         self.text.add(
-            Text(100, 'GAME WIN !!!', 'white', (640, 340), text_display))
+            Text(100, 'GAME WIN !!!', 'white', (640, 250), text_display))
         self.text.add(
-            Text(80, f'Your score: {SCORE}', 'white', (640, 400), text_display))
+            Text(80, f'Your score: {SCORE}', 'white', (640, 310), text_display))
         self.text.draw(screen)
         self.text.update()
-        self.main_menu_button = Button(None, (640, 500), 'MAIN MENU', pygame.font.Font(
+        self.main_menu_button = Button(None, (640, 410), 'MAIN MENU', pygame.font.Font(
             'font/Pixeltype.ttf', 60), 'white', 'red')
         self.main_menu_button.changeColor(self.mouse_pos)
         self.main_menu_button.update(screen)
@@ -517,13 +527,12 @@ if __name__ == '__main__':
     pygame.init()
     timer = pygame.USEREVENT + 1
     game = Game()
-    print(Player().__doc__)
+
     pygame.time.set_timer(timer, ENEMY_SPAWN)
-    
     pygame.mixer.music.load('audio/bg_music.mp3')
     pygame.mixer.music.set_volume(0.2)
     if MUSIC == True:
-        pygame.mixer.music.play(0, 30)
+        pygame.mixer.music.play(1, 30)
         
     game_menu_sound = pygame.mixer.Sound('audio/game_ui.mp3')
     game_over_sound = pygame.mixer.Sound('audio/game_over.mp3')
@@ -696,7 +705,6 @@ if __name__ == '__main__':
             screen.fill('white')
             game.score_board()
         elif GAME_OPTION:
-            screen.fill('white')
             game.game_option_menu()
         elif GAME_OVER:
             pygame.mixer.music.stop()
